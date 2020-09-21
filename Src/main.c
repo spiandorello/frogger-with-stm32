@@ -22,6 +22,7 @@ DMA_HandleTypeDef hdma_adc1;
 uint32_t ADC_buffer[2];
 uint32_t valor_ADC[2];
 struct pontos_t carro1p, carro2p, carro3p;
+//struct pontos_t sapop;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -63,24 +64,25 @@ void vTask_imprimi_carro1(void *pvParameters)
 	{
 
 		//movimento do carro, começa na direita e segue para esquerda
-			desenha_fig(&carro1p, &apaga_carro);
-			carro1p.x1 = carro1p.x1-1;
-			desenha_fig(&carro1p, &carro_esquerda);
-			vTaskDelay(100);
+		desenha_fig(&carro1p, &apaga_carro);
+		carro1p.x1 = carro1p.x1-1;
+		desenha_fig(&carro1p, &carro_esquerda);
+
 
 		if(carro1p.x1 == 0)
 		{
 			desenha_fig(&carro1p, &apaga_carro);
 			carro1p.x1 = 84;
 		}
+		vTaskDelay(100);
 	}
 }
-// Tarefa para imprimir carro2
+// Tarefa para imprimir carro2 e carro3
 void vTask_imprimi_carro2(void *pvParameters)
 {
 	carro2p.x1 = 0;
 	carro2p.y1 = 18;
-	carro3p.x1 = 42;
+	carro3p.x1 = 42;	//offset para que os carros não saiam no mesmo ponto
 	carro3p.y1 = 26;
 
 	while(1)
@@ -113,8 +115,9 @@ void vTask_imprimi_carro2(void *pvParameters)
 // Tarefa para imprimir sapo
 void vTask_imprimi_sapo(void *pvParameters)
 {
-	uint32_t vitorias = 0;
 	struct pontos_t sapop;
+	uint32_t vitorias = 0;
+	uint32_t i = 0, k = 0, n = 0;
 	//pontos iniciais do sapo
 	sapop.x1 = 39;		//metade da tela(seria 42 mas precisa de um offset por causa do tamanho da imagem)
 	sapop.y1 = 40;		//parte de baixo da tela(seria 48 mas precisa de um offset por causa do tamanho da imagem)
@@ -123,37 +126,61 @@ void vTask_imprimi_sapo(void *pvParameters)
 	{
 		desenha_fig(&sapop, &apaga_sapo);
 
-		if(((sapop.x1>carro1p.x1) && (sapop.x1<(carro1p.x1+12))) || (((sapop.x1+7)>carro1p.x1) && ((sapop.x1+7)<(carro1p.x1+12))))
+		//Teste de colisão
+		/*****************************************************************************
+		 * O teste é feito quando o sapo está na área que existe carros,
+		 * na parte superior tem um offset para considerar a parte traseira do sapo
+		 *****************************************************************************/
+		if(10<sapop.y1+7&& sapop.y1<32)
 		{
-			if((sapop.y1<carro1p.y1 && sapop.y1>(carro1p.y1-6)) || ((sapop.y1 < carro1p.y1 + 8) && sapop.y1 < carro1p.y1))
+			for(n=0; n<8; n++)
 			{
-				sapop.y1 = 40;
+				if(sapop.y1+n == carro1p.y1 || sapop.y1+n == carro1p.y1+1 || sapop.y1+n == carro1p.y1+2 ||
+						sapop.y1+n == carro1p.y1+3 || sapop.y1+n == carro1p.y1+4 || sapop.y1+n == carro1p.y1+5)
+				{
+					for(k=0; k<7; k++)
+					{
+						for(i=0; i<12; i++)
+						{
+							if(sapop.x1 == carro1p.x1+i)
+							{
+								sapop.y1 = 40;
+							}
+						}
+					}
+				}
+
+				if(sapop.y1+n == carro2p.y1 || sapop.y1+n == carro2p.y1+1 || sapop.y1+n == carro2p.y1+2 ||
+						sapop.y1+n == carro2p.y1+3 || sapop.y1+n == carro2p.y1+4 || sapop.y1+n == carro2p.y1+5)
+				{
+					for(k=0; k<7; k++)
+					{
+						for(i=0; i<12; i++)
+						{
+							if(sapop.x1 == carro2p.x1+i)
+							{
+								sapop.y1 = 40;
+							}
+						}
+					}
+				}
+
+				if(sapop.y1+n == carro3p.y1 || sapop.y1+n == carro3p.y1+1 || sapop.y1+n == carro3p.y1+2 ||
+						sapop.y1+n == carro3p.y1+3 || sapop.y1+n == carro3p.y1+4 || sapop.y1+n == carro3p.y1+5)
+				{
+					for(k=0; k<7; k++)
+					{
+						for(i=0; i<12; i++)
+						{
+							if(sapop.x1+k == carro3p.x1+i)
+							{
+								sapop.y1 = 40;
+							}
+						}
+					}
+				}
 			}
 		}
-
-//		if(((sapop.x1>carro1p.x1) && (sapop.x1<(carro1p.x1+12))) || (((sapop.x1+7)>carro1p.x1) && ((sapop.x1+7)<(carro1p.x1+12))))
-//		{
-//			if((sapop.y1<carro1p.y1 && sapop.y1>(carro1p.y1-6)) || (((sapop.y1-7)>carro1p.y1) && ((sapop.y1-7)<(carro1p.y1-6))))
-//			{
-//				sapop.y1 = 40;
-//			}
-//		}
-
-//		if(((sapop.x1>carro2p.x1) && (sapop.x1<(carro2p.x1+12))) || (((sapop.x1+7)>carro2p.x1) && ((sapop.x1+7)<(carro2p.x1+12))))
-//		{
-//			if((sapop.y1<carro2p.y1 && sapop.y1>(carro2p.y1-6)) || (((sapop.y1-7)>carro2p.y1) && ((sapop.y1-7)<(carro2p.y1-6))))
-//			{
-//				sapop.y1 = 40;
-//			}
-//		}
-//
-//		if(((sapop.x1>carro3p.x1) && (sapop.x1<(carro3p.x1+12))) || (((sapop.x1+7)>carro3p.x1) && ((sapop.x1+7)<(carro3p.x1+12))))
-//		{
-//			if((sapop.y1<carro3p.y1 && sapop.y1>(carro3p.y1-6)) || (((sapop.y1-7)>carro3p.y1) && ((sapop.y1-7)<(carro3p.y1-6))))
-//			{
-//				sapop.y1 = 40;
-//			}
-//		}
 
 		//condição para manter o desenho dentro dos limites do LCD
 		if(sapop.x1 == 0)
@@ -202,9 +229,10 @@ void vTask_imprimi_sapo(void *pvParameters)
 		goto_XY(0, 0);
 		string_LCD_Nr("V:", vitorias, 3);
 
-		vTaskDelay(50);
+		vTaskDelay(25);
 	}
 }
+
 
 //---------------------------------------------------------------------------------------------------
 /* USER CODE END 0 */
@@ -299,7 +327,7 @@ int main(void)
 	xTaskCreate(vTask_imprimi_carro1, "Task 2", 100, NULL, 1,NULL);
 	xTaskCreate(vTask_imprimi_carro2, "Task 3", 100, NULL, 1,NULL);
 	xTaskCreate(vTask_imprimi_sapo, "Task 4", 100, NULL, 1,NULL);
-	//xTaskCreate(vTask_teste, "Task 5", 100, NULL, 1,NULL);
+	//xTaskCreate(vTask_colisao, "Task 5", 100, NULL, 1,NULL);
 	/* USER CODE END RTOS_THREADS */
 
 	/* USER CODE BEGIN RTOS_QUEUES */
@@ -310,7 +338,6 @@ int main(void)
 	/* Start scheduler */
 	// osKernelStart();
 	vTaskStartScheduler();	// apos este comando o RTOS passa a executar as tarefas
-
 
   
   /* We should never get here as control is now taken by the scheduler */

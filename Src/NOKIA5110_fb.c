@@ -173,7 +173,7 @@ void inic_LCD()
 	SET_RST();
 
 	cmd_LCD(0x21);			//Tell LCD that extended commands follow
-	cmd_LCD(0xBF);			//Set LCD Vop (Contrast): Try 0xB1(good @ 3.3V) or 0xBF if your display is too dark
+	cmd_LCD(0x00);			//Set LCD Vop (Contrast): Try 0xB1(good @ 3.3V) or 0xBF if your display is too dark
 	cmd_LCD(0x04);			//Set Temp coefficent
 	cmd_LCD(0x14);			//LCD bias mode 1:48: Try 0x13 or 0x14
 
