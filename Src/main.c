@@ -22,6 +22,10 @@ DMA_HandleTypeDef hdma_adc1;
 uint32_t ADC_buffer[2];
 uint32_t valor_ADC[2];
 struct pontos_t carro1p, carro2p, carro3p;
+int32_t vitorias = 0;
+int32_t vidas = 5;
+int32_t velocidadeCarr01 = 100;
+int32_t velocidadeCarr02 = 100;
 //struct pontos_t sapop;
 /* USER CODE END PV */
 
@@ -62,7 +66,6 @@ void vTask_imprimi_carro1(void *pvParameters)
 
 	while(1)
 	{
-
 		//movimento do carro, começa na direita e segue para esquerda
 		desenha_fig(&carro1p, &apaga_carro);
 		carro1p.x1 = carro1p.x1-1;
@@ -73,7 +76,7 @@ void vTask_imprimi_carro1(void *pvParameters)
 			desenha_fig(&carro1p, &apaga_carro);
 			carro1p.x1 = 84;
 		}
-		vTaskDelay(70);
+		vTaskDelay(velocidadeCarr01);
 	}
 }
 // Tarefa para imprimir carro2 e carro3
@@ -105,7 +108,7 @@ void vTask_imprimi_carro2(void *pvParameters)
 			desenha_fig(&carro3p, &apaga_carro);
 			carro3p.x1 = 0;
 		}
-		vTaskDelay(50);
+		vTaskDelay(velocidadeCarr02);
 	}
 }
 
@@ -113,8 +116,7 @@ void vTask_imprimi_carro2(void *pvParameters)
 void vTask_imprimi_sapo(void *pvParameters)
 {
 	struct pontos_t sapop;
-	uint32_t vitorias = 0;
-	uint32_t i = 0, k = 0, n = 0;
+	uint32_t i = 0, k = 0, n = 0, colisao = 0;
 	//pontos iniciais do sapo
 	sapop.x1 = 39;		//metade da tela(seria 42 mas precisa de um offset por causa do tamanho da imagem)
 	sapop.y1 = 40;		//parte de baixo da tela(seria 48 mas precisa de um offset por causa do tamanho da imagem)
@@ -141,7 +143,16 @@ void vTask_imprimi_sapo(void *pvParameters)
 						{
 							if(sapop.x1+k == carro1p.x1+i)
 							{
+								colisao = 1;
 								sapop.y1 = 40;
+								vidas--;
+								vTaskDelay(10);
+								break;
+							}
+
+							if (colisao == 1) {
+								colisao = 0;
+								break;
 							}
 						}
 					}
@@ -156,8 +167,17 @@ void vTask_imprimi_sapo(void *pvParameters)
 						{
 							if(sapop.x1+k == carro2p.x1+i)
 							{
+								colisao = 1;
 								sapop.y1 = 40;
+								vidas--;
+								vTaskDelay(10);
+								break;
 							}
+						}
+
+						if (colisao == 1) {
+							colisao = 0;
+							break;
 						}
 					}
 				}
@@ -171,12 +191,40 @@ void vTask_imprimi_sapo(void *pvParameters)
 						{
 							if(sapop.x1+k == carro3p.x1+i)
 							{
+								colisao = 1;
 								sapop.y1 = 40;
+								vidas--;
+								vTaskDelay(20);
+								break;
 							}
+						}
+
+						if (colisao == 1) {
+							colisao = 0;
+							break;
 						}
 					}
 				}
 			}
+		}
+
+
+		if (vitorias <= 3) {
+			velocidadeCarr01 = 100;
+			velocidadeCarr02 = 80;
+		} else if (vitorias > 3 && vitorias <= 5) {
+			velocidadeCarr01 = 80;
+			velocidadeCarr02 = 60;
+		} else if (vitorias > 5 && vitorias <= 7) {
+			velocidadeCarr01 = 50;
+			velocidadeCarr02 = 40;
+		}
+		else if (vitorias > 5 && vitorias <= 7) {
+			velocidadeCarr01 = 30;
+			velocidadeCarr02 = 40;
+		} else {
+			velocidadeCarr01 = 30;
+			velocidadeCarr02 = 20;
 		}
 
 		//condição para manter o desenho dentro dos limites do LCD
@@ -224,11 +272,35 @@ void vTask_imprimi_sapo(void *pvParameters)
 			sapop.y1 = sapop.y1+1;
 		}
 
+		if (vitorias < 0) {
+			vitorias = 0;
+		}
+
+		if (vidas <= 0) {
+			limpa_LCD();
+
+			while(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_15)) // enquando nao pressionar joystick fica travado
+			{
+				goto_XY(8, 2);
+				string_LCD("Game over!");
+				vTaskDelay(1);
+				vitorias = 0;
+				vidas = 5;
+				velocidadeCarr01 = 100;
+				velocidadeCarr02 = 100;
+
+			}
+			limpa_LCD();
+		}
+
 		desenha_fig(&sapop, &sapo);
 		goto_XY(0, 0);
-		string_LCD_Nr("V:", vitorias, 3);
+		string_LCD_Nr("P:", vitorias, 3);
+		goto_XY(50, 0);
+		string_LCD_Nr("V:", vidas, 1);
 
 		vTaskDelay(50);
+
 	}
 }
 
@@ -244,7 +316,6 @@ void vTask_imprimi_sapo(void *pvParameters)
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-	uint32_t semente_PRNG=1;
 
   /* USER CODE END 1 */
 
@@ -287,12 +358,7 @@ int main(void)
 
 	while(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_15)) // enquando nao pressionar joystick fica travado
 	{
-		semente_PRNG++;		// semente para o gerador de n�meros pseudoaleatorios
-							// pode ser empregado o ADC lendo uma entrada flutuante para gerar a semente.
 	}
-
-	init_LFSR(semente_PRNG);	// inicializacao para geracao de numeros pseudoaleatorios
-	//rand_prng = prng_LFSR();	// sempre q a funcao prng() for chamada um novo nr � gerado.
 
 	limpa_LCD();
 	goto_XY(8, 2);
@@ -325,8 +391,7 @@ int main(void)
 	xTaskCreate(vTask_LCD_Print, "Task 1", 100, NULL, 1,NULL);
 	xTaskCreate(vTask_imprimi_carro1, "Task 2", 100, NULL, 1,NULL);
 	xTaskCreate(vTask_imprimi_carro2, "Task 3", 100, NULL, 1,NULL);
-	xTaskCreate(vTask_imprimi_sapo, "Task 4", 100, NULL, 1,NULL);
-	//xTaskCreate(vTask_colisao, "Task 5", 100, NULL, 1,NULL);
+	xTaskCreate(vTask_imprimi_sapo, "Task 4", 100, NULL, 2,NULL);
 	/* USER CODE END RTOS_THREADS */
 
 	/* USER CODE BEGIN RTOS_QUEUES */
