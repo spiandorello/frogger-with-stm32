@@ -68,13 +68,12 @@ void vTask_imprimi_carro1(void *pvParameters)
 		carro1p.x1 = carro1p.x1-1;
 		desenha_fig(&carro1p, &carro_esquerda);
 
-
 		if(carro1p.x1 == 0)
 		{
 			desenha_fig(&carro1p, &apaga_carro);
 			carro1p.x1 = 84;
 		}
-		vTaskDelay(100);
+		vTaskDelay(70);
 	}
 }
 // Tarefa para imprimir carro2 e carro3
@@ -87,7 +86,6 @@ void vTask_imprimi_carro2(void *pvParameters)
 
 	while(1)
 	{
-
 		//movimento do carro, começa na esquerda e segue para direita
 
 		desenha_fig(&carro2p, &apaga_carro);
@@ -96,7 +94,6 @@ void vTask_imprimi_carro2(void *pvParameters)
 		carro3p.x1 = carro3p.x1+1;
 		desenha_fig(&carro2p, &carro_direita);
 		desenha_fig(&carro3p, &carro_direita);
-		vTaskDelay(50);
 
 		if(carro2p.x1 == 84)
 		{
@@ -108,7 +105,7 @@ void vTask_imprimi_carro2(void *pvParameters)
 			desenha_fig(&carro3p, &apaga_carro);
 			carro3p.x1 = 0;
 		}
-
+		vTaskDelay(50);
 	}
 }
 
@@ -142,7 +139,7 @@ void vTask_imprimi_sapo(void *pvParameters)
 					{
 						for(i=0; i<12; i++)
 						{
-							if(sapop.x1 == carro1p.x1+i)
+							if(sapop.x1+k == carro1p.x1+i)
 							{
 								sapop.y1 = 40;
 							}
@@ -157,7 +154,7 @@ void vTask_imprimi_sapo(void *pvParameters)
 					{
 						for(i=0; i<12; i++)
 						{
-							if(sapop.x1 == carro2p.x1+i)
+							if(sapop.x1+k == carro2p.x1+i)
 							{
 								sapop.y1 = 40;
 							}
@@ -206,6 +203,7 @@ void vTask_imprimi_sapo(void *pvParameters)
 		}
 
 		//Movimentação pela leitura do joystick
+		//ADC1 - entrada A1 é o eixo X
 		if (valor_ADC[0] < 500)
 		{
 			sapop.x1 = sapop.x1-1;
@@ -215,6 +213,7 @@ void vTask_imprimi_sapo(void *pvParameters)
 		{
 			sapop.x1 = sapop.x1+1;
 		}
+		//ADC2 - entrada A2 é o eixo Y
 		if (valor_ADC[1] < 500)
 		{
 			sapop.y1 = sapop.y1-1;
@@ -229,7 +228,7 @@ void vTask_imprimi_sapo(void *pvParameters)
 		goto_XY(0, 0);
 		string_LCD_Nr("V:", vitorias, 3);
 
-		vTaskDelay(25);
+		vTaskDelay(50);
 	}
 }
 
